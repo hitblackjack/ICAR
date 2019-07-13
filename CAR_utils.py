@@ -1,4 +1,4 @@
-# coding = utf-8
+# coding= utf-8
 import cv2 as cv
 import random
 from collections import deque
