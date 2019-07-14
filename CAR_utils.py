@@ -276,7 +276,7 @@ class EnvCar:
         self.car.record()
         # feel the road
         feel_arr = self.car.feel(self.area)
-        state = feel_arr[:, 0]/self.car.feel_length
+        state = feel_arr[:, 0]/float(self.car.feel_length)
         # reward_part1 = np.sqrt(np.sum(np.square(self.car.posx-self.width//2)+np.square(self.car.posy-self.height//2)))
         # reward = 0.1 + reward_part1 / (5000+reward_part1) + np.mean(np.sort(state)[:3])
         # reward = self.tick * 1.2 / (self.tick + 300.)
