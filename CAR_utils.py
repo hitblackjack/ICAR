@@ -4,6 +4,9 @@ import random
 from collections import deque
 from ANN_utils import *
 import os
+import cPickle as pickle
+import pdb
+
 
 
 class Car:
@@ -314,6 +317,7 @@ class EnvCar:
             cv.imshow(self.window_name, canvas)
 
         if self.end_flag:
+            cv.waitKey()
             cv.destroyAllWindows()
         return state, reward, self.done, self.info
 
@@ -325,8 +329,8 @@ class DQNAgent:
         self.action_size = action_size
         self.memory = deque(maxlen=2000)
         self.gamma = 0.95                   # 计算未来奖励时的折算率
-        self.epsilon = 1.0                  # agent 最初探索环境时选择 action 的探索率
-        self.epsilon_min = 0.01             # agent 控制随机探索的阈值
+        self.epsilon = 0.30                  # agent 最初探索环境时选择 action 的探索率
+        self.epsilon_min = 0.00001             # agent 控制随机探索的阈值
         self.epsilon_decay = 0.998            # 随着 agent 玩游戏越来越好，降低探索率
         self.learning_rate = 0.001
         self.model = self._build_model()
@@ -352,6 +356,9 @@ class DQNAgent:
 
     def replay(self, batch_size):
         minibatch = random.sample(self.memory, batch_size)
+        states = np.empty(shape = [1,self.state_size])
+        target_fs = np.empty(shape=[1,self.action_size])
+        #target_fs = np.empty(shape = self.model.predict(minibatch[0][0]).shape)
         for state, action, reward, next_state, done in minibatch:
             target = reward
             if not done:
@@ -359,12 +366,17 @@ class DQNAgent:
                           np.amax(self.model.predict(next_state)[0]))
             target_f = self.model.predict(state)
             target_f[0][action] = target
-            self.model.fit(state, target_f, epoch=1, verbose=0)
+            #self.model.fit(state, target_f, epoch=10, verbose=0)
+            states = np.append(states,state,axis=0)
+            target_fs = np.append(target_fs,target_f,axis=0)
+
+        self.model.fit(states[1:,:], target_fs[1:,:], epoch=10, verbose=0)
+
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
 
     def save(self):
-        pass
+        pickle.dump(self.__dict__,open('drive.mod','wb',2))
 
 
 def rotate_vector(v, angle):  # with the clock
