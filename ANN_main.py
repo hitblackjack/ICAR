@@ -68,6 +68,8 @@ def train():
 
 def givenModelJustRun():
     env = EnvCar()
+    env.ori_pos = 600,580 ###450,580
+    env.reset()
 
     state_size = env.state_size
     action_size = env.action_size
@@ -139,5 +141,5 @@ def continueTrain():
             # print(len(agent.memory), end_time - start_time)
 
 
-train()
-#givenModelJustRun()
+#train()
+givenModelJustRun()
