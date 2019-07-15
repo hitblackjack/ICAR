@@ -1,10 +1,12 @@
 # FileName:ANN_main.py
-# coding = utf-8
+# coding= utf-8
 # Created by Hzq
 from ANN_utils import *
 from CAR_utils import *
 from time import sleep
 import datetime
+import cPickle as pickle
+import pdb
 
 
 def s_1():
@@ -26,7 +28,7 @@ def s_1():
     print(model.predict(a), a.shape)
 
 
-def s_4():
+def train():
     env = EnvCar()
 
     state_size = env.state_size
@@ -54,7 +56,7 @@ def s_4():
             if done or time == max_time-1:
                 print("episode: {}/{}, score: {}, e: {:.2}, len: {}"
                       .format(e, EPISODES, time, agent.epsilon, len(agent.memory)))
-                if e % 5 == 0:
+                if e % 10 == 0:
                     agent.save()
                 break
             # start_time = datetime.datetime.now()
@@ -64,5 +66,78 @@ def s_4():
             # print(len(agent.memory), end_time - start_time)
 
 
-s_4()
+def givenModelJustRun():
+    env = EnvCar()
 
+    state_size = env.state_size
+    action_size = env.action_size
+    agent = DQNAgent(state_size, action_size)
+    agentDict = pickle.load(open('drive.mod','rb'))
+    agent.__dict__.update(agentDict)
+    agent.epsilon_min = 1e-20             # agent 控制随机探索的阈值
+
+    batch_size = 16
+    EPISODES = 1000
+    max_time = 2500
+
+    state = env.reset()[:, 0]
+    state = np.reshape(state, [1, state_size])
+
+    for time in range(max_time):
+        action = agent.act(state)
+        next_state, reward, done, _ = env.step(delay=1, display=1, action=action, mode='map', generation=1, verbose=1)
+        state = next_state
+
+        if done or time == max_time-1:
+            print("episode: {}/{}, score: {}, e: {:.2}, len: {}"
+                  .format(1, EPISODES, time, agent.epsilon, len(agent.memory)))
+
+            pdb.set_trace()
+            break
+
+def continueTrain():
+    env = EnvCar()
+
+    state_size = env.state_size
+    action_size = env.action_size
+    agent = DQNAgent(state_size, action_size)
+    agentDict = pickle.load(open('drive.mod','rb'))
+    agent.__dict__.update(agentDict)
+    agent.epsilon_min = 1e-20             # agent 控制随机探索的阈值
+
+    batch_size = 16
+    EPISODES = 1000
+    max_time = 2500
+
+    state = env.reset()[:, 0]
+    state = np.reshape(state, [1, state_size])
+
+    for e in range(EPISODES):
+        state = env.reset()[:, 0]
+        state = np.reshape(state, [1, state_size])
+
+        for time in range(max_time):
+            action = agent.act(state)
+
+            next_state, reward, done, _ = env.step(delay=1, display=1, action=action, mode='map', generation=e, verbose=1)
+            reward = reward if not done else -10
+            next_state = np.reshape(next_state, [1, state_size])
+
+            agent.remember(state, action, reward, next_state, done)
+
+            state = next_state
+            if done or time == max_time-1:
+                print("episode: {}/{}, score: {}, e: {:.2}, len: {}"
+                      .format(e, EPISODES, time, agent.epsilon, len(agent.memory)))
+                if e % 10 == 0:
+                    agent.save()
+                break
+            # start_time = datetime.datetime.now()
+            if len(agent.memory) > batch_size and time % 2 == 0:
+                agent.replay(batch_size)
+            # end_time = datetime.datetime.now()
+            # print(len(agent.memory), end_time - start_time)
+
+
+train()
+#givenModelJustRun()
