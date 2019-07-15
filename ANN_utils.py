@@ -104,7 +104,7 @@ class MlpNn:
     def fit(self, train_x, train_y, epoch,
             loss_type='square_loss', learn_rate=0.001, learn_decay=0.0002, verbose=None):
         cost_record = []
-        div = epoch / 10
+        div =max(epoch / 10,1)
 
         self.m = train_x.shape[0]
         start_time = datetime.datetime.now()
@@ -127,7 +127,7 @@ class MlpNn:
                 cost_record.append(self.cost)
             if verbose and (eps+1) % div == 0:
                 current_time = datetime.datetime.now()
-                eta = (current_time - start_time) * ((epoch - eps) / eps)
+                eta = (current_time - start_time) * ((epoch - eps-1) / (eps+1))
                 print('Epoch=', eps+1, '  Cost=', np.sum(self.cost), '  ETA:', eta)
         if verbose >= 2:
             cost_record = np.array(cost_record).reshape(-1)
